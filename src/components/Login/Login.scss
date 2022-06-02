@@ -1,0 +1,35 @@
+.red {
+    border: 1px red solid;
+}
+.green {
+    border: 1px green solid;
+}
+.login-container {
+    background-color: #f0f2f5;
+    min-height: 100vh;
+    .content-right {
+        background-color: white;
+        // border: 1px solid #c1c1c1;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px #c1c1c1;
+        .btn-success {
+            background-color: #42b72a !important;
+        }
+        .btn-success:hover {
+            background-color: #379c22 !important;
+        }
+        .forgot-password {
+            text-decoration: none;
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+        input {
+            height: 3rem;
+        }
+        .btn-height {
+            height: 3rem;
+            font-size: 1.2rem;
+        }
+    }
+}
