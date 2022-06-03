@@ -1,9 +1,9 @@
 import './Register.scss';
 import { useHistory } from 'react-router-dom';
-import axios from 'axios';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
+import { registerNewUser } from '../../services/userServices';
 
 const Register = (props) => {
     let history = useHistory();
@@ -12,59 +12,81 @@ const Register = (props) => {
     };
     const [email, setEmail] = useState('');
     const [fullName, setFullName] = useState('');
-    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
     const [confirmPwd, setConfirmPwd] = useState('');
 
-    const [emailValid, setEmailValid] = useState('');
-    const [nameValid, setNameValid] = useState('');
-    const [pwdValid, setPwdValid] = useState('');
-    const [rePwdValid, setRePwdValid] = useState('');
-
-    const validateEmail = () => {
-        var re = /\S+@\S+\.\S+/;
-        re.test(email) ? setEmailValid('is-valid') : setEmailValid('is-invalid');
+    const defaultValidCheck = {
+        emailValid: true,
+        nameValid: true,
+        phoneValid: true,
+        pwdValid: true,
+        rePwdValid: true,
     }
+    const [objValidInput, setObjValidInput] = useState(defaultValidCheck)
+
 
     const isValid = () => {
+        setObjValidInput(defaultValidCheck);
+
         if (!email) {
             toast.error("Email is required");
-            setEmailValid('is-invalid')
+            setObjValidInput({ ...defaultValidCheck, emailValid: false });
             return false
         }
+        const checkEmailRegex = /\S+@\S+\.\S+/;
+        if (!checkEmailRegex.test(email)) {
+            setObjValidInput({ ...defaultValidCheck, emailValid: false });
+            toast.error("Email is wrong")
+        }
         if (!fullName) {
-            toast.error("FullName is required");
-            setNameValid('is-invalid');
+            toast.error("Full Name is required");
+            setObjValidInput({ ...defaultValidCheck, nameValid: false });
+            return false
+        }
+        if (!phone) {
+            toast.error("Phone number is required");
+            setObjValidInput({ ...defaultValidCheck, phoneValid: false });
+            return false
+        }
+        if (isNaN(phone)) {
+            toast.error("Phone number is wrong type");
+            setObjValidInput({ ...defaultValidCheck, phoneValid: false });
             return false
         }
         if (!password) {
             toast.error("Password is required");
-            setPwdValid('is-invalid');
+            setObjValidInput({ ...defaultValidCheck, pwdValid: false });
+
             return false
         }
         if (password !== confirmPwd) {
+            setObjValidInput({ ...defaultValidCheck, rePwdValid: false });
             toast.error("Re-enter Password do not match");
-            setRePwdValid('is-invalid');
             return false
         }
-        setEmailValid('is-valid');
-        setNameValid('is-valid');
-        setPwdValid('is-valid');
-        setRePwdValid('is-valid');
 
         return true
     }
-    const handleRegister = () => {
+
+
+    const handleRegister = async () => {
         let check = isValid();
-        let userData = { email, fullName, username, password };
+        if (check === true) {
+            let response = await registerNewUser(email, fullName, password, phone);
+            let serverData = response.data;
+            if (+serverData.EC === 0) {
+                toast.success(serverData.EM);
+                history.push('/login');
+            } else {
+                toast.error(serverData.EM);
+            }
+
+        }
 
     }
 
-    useEffect(() => {
-        // axios.get('http://localhost:8080/api/test-api').then(data => {
-        //     console.log("check data axios: ", data.data);
-        // })
-    }, []);
+
     return (
 
         <div className="register-container">
@@ -85,21 +107,19 @@ const Register = (props) => {
                             <div className="col-12 form-group">
                                 <input
                                     type="email"
-                                    className={`form-control ${emailValid}`}
+                                    className={objValidInput.emailValid ? "form-control" : "form-control is-invalid"}
                                     name="email"
                                     value={email}
                                     onChange={(event) => {
                                         setEmail(event.target.value);
-                                        validateEmail();
                                     }}
-                                    onBlur={() => validateEmail()}
                                     placeholder="Email Address (eg: tom@domain.com)"
                                 />
                             </div>
                             <div className="col-12  mt-3 form-group">
                                 <input
                                     type="text"
-                                    className={`form-control ${nameValid}`}
+                                    className={objValidInput.nameValid ? 'form-control' : 'form-control is-invalid'}
                                     name="fullname"
                                     placeholder="Full Name"
                                     value={fullName}
@@ -108,11 +128,22 @@ const Register = (props) => {
                                     }}
                                 />
                             </div>
-
+                            <div className="col-12  mt-3 form-group">
+                                <input
+                                    type="text"
+                                    className={objValidInput.phoneValid ? 'form-control' : 'form-control is-invalid'}
+                                    name="phone"
+                                    placeholder="Phone number"
+                                    value={phone}
+                                    onChange={(event) => {
+                                        setPhone(event.target.value);
+                                    }}
+                                />
+                            </div>
                             <div className="col-12 mt-3">
                                 <input
                                     type="password"
-                                    className={`form-control ${pwdValid}`}
+                                    className={objValidInput.pwdValid ? 'form-control' : 'form-control is-invalid'}
                                     value={password}
                                     onChange={(event) => {
                                         setPassword(event.target.value);
@@ -124,25 +155,13 @@ const Register = (props) => {
                             <div className="col-12 mt-3">
                                 <input
                                     type="password"
-                                    className={`form-control ${rePwdValid}`}
+                                    className={objValidInput.rePwdValid ? 'form-control' : 'form-control is-invalid'}
                                     value={confirmPwd}
                                     onChange={(event) => {
                                         setConfirmPwd(event.target.value);
                                     }}
                                     name="re-password"
                                     placeholder="Re-enter Password"
-                                />
-                            </div>
-                            <div className="col-12 mt-3">
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={username}
-                                    onChange={(event) => {
-                                        setUsername(event.target.value);
-                                    }}
-                                    name="username"
-                                    placeholder="User Name"
                                 />
                             </div>
                         </div>
