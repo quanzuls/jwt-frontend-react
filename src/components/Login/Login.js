@@ -3,6 +3,8 @@ import { useHistory } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { loginUser } from '../../services/userServices';
+import { useEffect } from 'react';
+import _ from 'lodash';
 
 const Login = (props) => {
     let history = useHistory();
@@ -39,8 +41,16 @@ const Login = (props) => {
         let response = await loginUser(valueLogin, password);
         let serverData = response.data;
         if (response && response.data && +serverData.EC === 0) {
+            //success
+            let data = {
+                isAuthenticated: true,
+                token: 'face token'
+            }
+            sessionStorage.setItem('account', JSON.stringify(data));
             toast.success(serverData.EM);
-            history.push('/login');
+            history.push('/users');
+            window.location.reload();
+
         }
         if (response && response.data && +serverData.EC !== 0) {
             toast.error(serverData.EM);
@@ -49,7 +59,22 @@ const Login = (props) => {
 
 
     };
+    const handleKeyPress = (event) => {
+        console.log(">>check event: ", event.code);
+        if (event.charCode === 13 && event.code === 'Enter') {
+            handleLogin();
 
+        }
+
+    }
+
+    useEffect(() => {
+        let session = sessionStorage.getItem('account');
+        if (session) {
+            history.push('/');
+            window.location.reload();
+        };
+    }, [])
     return (
         <div className="login-container">
             <div className="container">
@@ -79,6 +104,7 @@ const Login = (props) => {
                             placeholder="Password"
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
+                            onKeyPress={(event) => handleKeyPress(event)}
                         />
                         <button className="btn btn-primary fw-bold btn-height" onClick={() => handleLogin()}>
                             Log In
